@@ -68,7 +68,7 @@
           formData.append("totalChunks", totalChunks);
           formData.append("filename", file.name); // 파일명 추가
 
-          fetch("/upload", {
+          fetch("/pdf/upload", {
             method: "POST",
             body: formData,
           })
