@@ -71,7 +71,7 @@
 
           try {
             await Promise.all(uploadPromises);
-            message.textContent = "모든 청크가 업로드되었습니다.";
+            message.textContent = "모든 청크가 업로드되었습니다. 다운로드 중...";
             const formData = new FormData();
             formData.append("chunkNumber", -1);
             formData.append("totalChunks", totalChunks);
