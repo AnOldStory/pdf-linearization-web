@@ -60,7 +60,7 @@
         message.textContent = "";
 
         // 파일명에서 띄어쓰기를 _로 변경하고 .pdf 제거
-        const sanitizedFileName = file.name.replace(/\s+/g, "_").replace(/\.pdf$/, "");
+        const sanitizedFileName = file.name; //.replace(/\s+/g, "_").replace(/\.pdf$/, "");
 
         const uploadChunks = async () => {
           const uploadPromises = [];
@@ -84,7 +84,6 @@
                 if (!response.ok) {
                   throw new Error("파일 업로드 실패");
                 }
-                resolve();
               })
               .catch(reject);
           } catch (error) {

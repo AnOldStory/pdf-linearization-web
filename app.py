@@ -29,7 +29,7 @@ def process_pdf(input_filename, total_chunks):
             os.remove(part_path)  # 청크 파일 삭제
 
     # PDF 파일 선형화
-    output_filename = f"linearized_{input_filename}.pdf"
+    output_filename = f"linearized_{input_filename}"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
     linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
 
@@ -49,7 +49,7 @@ def upload_file():
 
     if chunk_number == -1:
         process_pdf(filename, total_chunks)  # 쓰레드 제거하고 직접 호출
-        output_filename = f"linearized_{filename}.pdf"
+        output_filename = f"linearized_{filename}"
         output_path = os.path.join(UPLOAD_FOLDER, output_filename)
 
         if os.path.exists(output_path):
@@ -72,7 +72,7 @@ def upload_file():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
-    output_filename = f"linearized_{filename}.pdf"
+    output_filename = f"linearized_{filename}"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
 
     if os.path.exists(output_path):
