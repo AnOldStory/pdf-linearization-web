@@ -24,14 +24,23 @@ def process_pdf(input_filename, total_chunks):
     with open(os.path.join(UPLOAD_FOLDER, input_filename), 'wb') as outfile:
         for num in range(total_chunks):
             part_path = os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")
-            with open(part_path, 'rb') as part_file:
-                outfile.write(part_file.read())
-            os.remove(part_path)  # 청크 파일 삭제
+            if os.path.exists(part_path):  # 청크 파일 존재 여부 체크
+                with open(part_path, 'rb') as part_file:
+                    outfile.write(part_file.read())
+                os.remove(part_path)  # 청크 파일 삭제
+            else:
+                print(f"청크 파일 {part_path}가 존재하지 않습니다.")  # 디버깅용 메시지
 
     # PDF 파일 선형화
     output_filename = f"linearized_{input_filename}"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
+    
+    # 최종 파일이 비어 있지 않은지 확인
+    if os.path.getsize(os.path.join(UPLOAD_FOLDER, input_filename)) > 0:
+        linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
+    else:
+        print("최종 파일이 비어 있습니다.")  # 디버깅용 메시지
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -42,8 +51,6 @@ def upload_file():
 
     # 현재까지의 청크 수 확인
     total_chunks = int(request.form.get('totalChunks', 0))
-
-    # -1을 받으면 청크를 합치고 선형화
     chunk_number = int(request.form.get('chunkNumber', 0))
     filename = request.form.get('filename')  # 클라이언트에서 전송한 파일명
 
