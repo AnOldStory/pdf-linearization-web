@@ -1,7 +1,6 @@
 from flask import Flask, request, send_file, render_template
 import PyPDF2
 import os
-import threading
 
 app = Flask(__name__)
 
@@ -30,7 +29,7 @@ def process_pdf(input_filename, total_chunks):
             os.remove(part_path)  # 청크 파일 삭제
 
     # PDF 파일 선형화
-    output_filename = f"linearized_{input_filename}"
+    output_filename = f"linearized_{input_filename}.pdf"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
     linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
 
@@ -40,36 +39,40 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+
+    # 현재까지의 청크 수 확인
+    total_chunks = int(request.form.get('totalChunks', 0))
+
+    # -1을 받으면 청크를 합치고 선형화
+    chunk_number = int(request.form.get('chunkNumber', 0))
+    filename = request.form.get('filename')  # 클라이언트에서 전송한 파일명
+
+    if chunk_number == -1:
+        process_pdf(filename, total_chunks)  # 쓰레드 제거하고 직접 호출
+        output_filename = f"linearized_{filename}.pdf"
+        output_path = os.path.join(UPLOAD_FOLDER, output_filename)
+
+        if os.path.exists(output_path):
+            return send_file(output_path, as_attachment=True)
+
     if 'file' not in request.files:
         return '파일이 없습니다.', 400
 
     file = request.files['file']
-    filename = request.form.get('filename')  # 클라이언트에서 전송한 파일명
 
     if filename == '':
         return '파일명을 입력하세요.', 400
 
     # 파일명과 경로 설정
-    chunk_number = int(request.form.get('chunkNumber', 0))
     input_path = os.path.join(UPLOAD_FOLDER, f"{filename}.part{chunk_number}")
 
     file.save(input_path)
-
-    # 현재까지의 청크 수 확인
-    total_chunks = int(request.form.get('totalChunks', 0))
-
-    # 모든 청크가 업로드되었는지 확인
-    if total_chunks > 0 and all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{filename}.part{num}")) for num in range(total_chunks)):
-        # 청크 합치기 및 선형화 작업을 병렬로 처리
-        threading.Thread(target=process_pdf, args=(filename, total_chunks)).start()
-
-        return '모든 청크가 업로드되었습니다.', 200
 
     return '청크 업로드 완료', 200
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
-    output_filename = f"{filename}.pdf"
+    output_filename = f"linearized_{filename}.pdf"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
 
     if os.path.exists(output_path):

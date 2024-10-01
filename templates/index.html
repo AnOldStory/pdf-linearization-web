@@ -51,10 +51,8 @@
           return;
         }
 
-        const chunkSize = 1024 * 1024 * 10; // 10MB 청크 크기
+        const chunkSize = 1024 * 1024 * 5; // 5MB 청크 크기
         const totalChunks = Math.ceil(file.size / chunkSize);
-        let currentChunk = 0;
-
         const progressBar = document.getElementById("progress-bar");
         const message = document.getElementById("message");
         const downloadBtn = document.getElementById("downloadBtn");
@@ -64,42 +62,62 @@
         // 파일명에서 띄어쓰기를 _로 변경하고 .pdf 제거
         const sanitizedFileName = file.name.replace(/\s+/g, "_").replace(/\.pdf$/, "");
 
-        const uploadChunk = (chunk) => {
-          const formData = new FormData();
-          formData.append("file", chunk);
-          formData.append("chunkNumber", currentChunk);
-          formData.append("totalChunks", totalChunks);
-          formData.append("filename", sanitizedFileName); // 수정된 파일명 사용
+        const uploadChunks = async () => {
+          const uploadPromises = [];
+          for (let i = 0; i < totalChunks; i++) {
+            const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
+            uploadPromises.push(uploadChunk(chunk, i, totalChunks, sanitizedFileName));
+          }
 
-          fetch("/pdf/upload", {
-            method: "POST",
-            body: formData,
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error("파일 업로드 실패");
-              }
-              currentChunk++;
-              progressBar.style.width = `${((currentChunk / totalChunks) * 100).toFixed(2)}%`;
-              message.textContent = `청크 ${currentChunk} / ${totalChunks} 업로드 완료`;
+          try {
+            await Promise.all(uploadPromises);
+            message.textContent = "모든 청크가 업로드되었습니다.";
+            const formData = new FormData();
+            formData.append("chunkNumber", -1);
+            formData.append("filename", filename); // 수정된 파일명 사용
 
-              if (currentChunk < totalChunks) {
-                const nextChunk = file.slice(currentChunk * chunkSize, (currentChunk + 1) * chunkSize);
-                uploadChunk(nextChunk);
-              } else {
-                message.textContent = "모든 청크가 업로드되었습니다.";
-                downloadBtn.style.display = "inline"; // 다운로드 버튼을 표시
-                downloadBtn.href = `/pdf/download/${sanitizedFileName}`; // 다운로드 링크 설정
-                downloadBtn.download = `linearized_${sanitizedFileName}.pdf`; // 다운로드 시 파일 확장자 설정
-              }
+            fetch("/pdf/upload", {
+              method: "POST",
+              body: formData,
             })
-            .catch((error) => {
-              message.textContent = error.message;
-            });
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("파일 업로드 실패");
+                }
+                resolve();
+              })
+              .catch(reject);
+          } catch (error) {
+            message.textContent = error.message;
+          }
         };
 
-        const firstChunk = file.slice(0, chunkSize);
-        uploadChunk(firstChunk);
+        const uploadChunk = (chunk, chunkNumber, totalChunks, filename) => {
+          return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("file", chunk);
+            formData.append("chunkNumber", chunkNumber);
+            formData.append("totalChunks", totalChunks);
+            formData.append("filename", filename); // 수정된 파일명 사용
+
+            fetch("/pdf/upload", {
+              method: "POST",
+              body: formData,
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("파일 업로드 실패");
+                }
+                const progressPercentage = ((chunkNumber + 1) / totalChunks) * 100;
+                progressBar.style.width = `${progressPercentage.toFixed(2)}%`;
+                message.textContent = `청크 ${chunkNumber + 1} / ${totalChunks} 업로드 완료`;
+                resolve();
+              })
+              .catch(reject);
+          });
+        };
+
+        uploadChunks();
       }
     </script>
   </body>
