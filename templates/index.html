@@ -51,7 +51,7 @@
           return;
         }
 
-        const chunkSize = 1024 * 1024 * 10; // 10MB 청크 크기
+        const chunkSize = 1024 * 1024 * 5; // 5MB 청크 크기
         const totalChunks = Math.ceil(file.size / chunkSize);
         const progressBar = document.getElementById("progress-bar");
         const message = document.getElementById("message");
@@ -62,7 +62,7 @@
 
         const progressPercentage = (chkcounter / totalChunks) * 100;
         progressBar.style.width = `${progressPercentage.toFixed(2)}%`;
-        message.textContent = `분할 업로드 시작...`;
+        message.textContent = `분할하려 병렬 업로드 시작...`;
 
         const sanitizedFileName = file.name;
 
@@ -76,7 +76,7 @@
           try {
             await Promise.all(uploadPromises);
             progressBar.style.width = "100%";
-            message.textContent = "모든 파일이 업로드되었습니다. 다운로드 중...";
+            message.textContent = "모든 파일이 업로드되었습니다. 파일 수정 후 다운로드 중...";
             const formData = new FormData();
             formData.append("chunkNumber", -1);
             formData.append("totalChunks", totalChunks);
@@ -125,7 +125,7 @@
                 }
                 const progressPercentage = (chkcounter++ / totalChunks) * 100;
                 progressBar.style.width = `${progressPercentage.toFixed(2)}%`;
-                message.textContent = `파일 분할 ${chkcounter} / ${totalChunks} 업로드 완료 ${chkcounter * 10}MB`;
+                message.textContent = `파일 ${chkcounter} / ${totalChunks} 업로드 완료 ${chkcounter * 5}MB`;
                 resolve();
               })
               .catch(reject);
