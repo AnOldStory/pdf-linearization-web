@@ -74,6 +74,7 @@
             message.textContent = "모든 청크가 업로드되었습니다.";
             const formData = new FormData();
             formData.append("chunkNumber", -1);
+            formData.append("totalChunks", totalChunks);
             formData.append("filename", sanitizedFileName); // 수정된 파일명 사용
 
             fetch("/pdf/upload", {

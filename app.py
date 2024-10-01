@@ -24,12 +24,9 @@ def process_pdf(input_filename, total_chunks):
     with open(os.path.join(UPLOAD_FOLDER, input_filename), 'wb') as outfile:
         for num in range(total_chunks):
             part_path = os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")
-            if os.path.exists(part_path):  # 청크 파일 존재 여부 체크
-                with open(part_path, 'rb') as part_file:
-                    outfile.write(part_file.read())
-                os.remove(part_path)  # 청크 파일 삭제
-            else:
-                print(f"청크 파일 {part_path}가 존재하지 않습니다.")  # 디버깅용 메시지
+            with open(part_path, 'rb') as part_file:
+                outfile.write(part_file.read())
+            os.remove(part_path)  # 청크 파일 삭제
 
     # PDF 파일 선형화
     output_filename = f"linearized_{input_filename}"
