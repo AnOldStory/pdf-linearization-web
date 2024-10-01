@@ -58,9 +58,9 @@
         const downloadBtn = document.getElementById("downloadBtn");
         progressBar.style.width = "0%";
         message.textContent = "";
+        chkcounter = 0;
 
-        // 파일명에서 띄어쓰기를 _로 변경하고 .pdf 제거
-        const sanitizedFileName = file.name; //.replace(/\s+/g, "_").replace(/\.pdf$/, "");
+        const sanitizedFileName = file.name;
 
         const uploadChunks = async () => {
           const uploadPromises = [];
@@ -92,7 +92,7 @@
                 const a = document.createElement("a"); // 앵커 태그 생성
                 a.style.display = "none";
                 a.href = url;
-                a.download = "파일이름.pdf"; // 다운로드할 파일 이름
+                a.download = sanitizedFileName; // 다운로드할 파일 이름
                 document.body.appendChild(a);
                 a.click(); // 클릭하여 다운로드 시작
                 window.URL.revokeObjectURL(url); // Blob URL 해제
@@ -118,9 +118,9 @@
                 if (!response.ok) {
                   throw new Error("파일 업로드 실패");
                 }
-                const progressPercentage = ((chunkNumber + 1) / totalChunks) * 100;
+                const progressPercentage = (chkcounter++ / totalChunks) * 100;
                 progressBar.style.width = `${progressPercentage.toFixed(2)}%`;
-                message.textContent = `청크 ${chunkNumber + 1} / ${totalChunks} 업로드 완료`;
+                message.textContent = `청크 ${chkcounter} / ${totalChunks} 업로드 완료`;
                 resolve();
               })
               .catch(reject);
