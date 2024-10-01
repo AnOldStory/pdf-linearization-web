@@ -87,6 +87,7 @@
                 message.textContent = "모든 청크가 업로드되었습니다.";
                 downloadBtn.style.display = "inline"; // 다운로드 버튼을 표시
                 downloadBtn.href = `/download/${file.name}`; // 다운로드 링크 설정
+                downloadBtn.download = `${file.name}.pdf`; // 다운로드 시 파일 확장자 설정
               }
             })
             .catch((error) => {
