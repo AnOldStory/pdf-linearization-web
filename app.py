@@ -35,16 +35,16 @@ def upload_file():
 
     # 파일명과 경로 설정
     input_filename = file.filename
-    chunk_number = request.form.get('chunkNumber', 0)
+    chunk_number = int(request.form.get('chunkNumber', 0))
     input_path = os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{chunk_number}")
 
     file.save(input_path)
 
     # 모든 청크가 업로드되었는지 확인
-    if all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")) for num in range(int(chunk_number) + 1)):
+    if all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")) for num in range(chunk_number + 1)):
         # 모든 청크를 하나로 합칩니다.
         with open(os.path.join(UPLOAD_FOLDER, input_filename), 'wb') as outfile:
-            for num in range(int(chunk_number) + 1):
+            for num in range(chunk_number + 1):
                 part_path = os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")
                 with open(part_path, 'rb') as part_file:
                     outfile.write(part_file.read())
@@ -55,6 +55,7 @@ def upload_file():
         output_path = os.path.join(UPLOAD_FOLDER, output_filename)
         linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
 
+        # 변형된 파일을 즉시 반환
         return send_file(output_path, as_attachment=True)
 
     return '청크 업로드 완료', 200

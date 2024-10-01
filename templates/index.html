@@ -5,7 +5,7 @@
     <title>파일 업로드</title>
   </head>
   <body>
-    <h1>파일 업로드</h1>
+    <h1>파일 업로드v</h1>
     <input type="file" id="fileInput" />
     <button onclick="uploadFile()">업로드</button>
 
@@ -13,7 +13,7 @@
       async function uploadFile() {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
-        const chunkSize = 1024 * 1024; // 1MB 청크 크기
+        const chunkSize = 1024 * 1024 * 40; // 40MB 청크 크기
         let offset = 0;
         let chunkNumber = 0;
 
@@ -23,16 +23,28 @@
           formData.append("file", chunk, file.name);
           formData.append("chunkNumber", chunkNumber); // 청크 번호 추가
 
-          await fetch("/pdf/upload", {
+          const response = await fetch("/pdf/upload", {
             method: "POST",
             body: formData,
           });
 
+          // 변형된 파일을 바로 다운로드하는 경우
+          if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `linearized_${file.name}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert("업로드 및 변형 완료!");
+            return; // 업로드 후 바로 종료
+          }
+
           offset += chunkSize;
           chunkNumber++;
         }
-
-        alert("업로드 완료!");
       }
     </script>
   </body>
