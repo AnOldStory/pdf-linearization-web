@@ -42,7 +42,7 @@
     <script>
       document.getElementById("uploadBtn").addEventListener("click", uploadFile);
 
-      function uploadFile() {
+      const uploadFile = () => {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
 
@@ -61,12 +61,15 @@
         progressBar.style.width = "0%";
         message.textContent = "";
 
+        // 파일명에서 띄어쓰기를 _로 변경
+        const sanitizedFileName = file.name.replace(/\s+/g, "_");
+
         const uploadChunk = (chunk) => {
           const formData = new FormData();
           formData.append("file", chunk);
           formData.append("chunkNumber", currentChunk);
           formData.append("totalChunks", totalChunks);
-          formData.append("filename", file.name); // 파일명 추가
+          formData.append("filename", sanitizedFileName); // 수정된 파일명 사용
 
           fetch("/pdf/upload", {
             method: "POST",
@@ -86,8 +89,8 @@
               } else {
                 message.textContent = "모든 청크가 업로드되었습니다.";
                 downloadBtn.style.display = "inline"; // 다운로드 버튼을 표시
-                downloadBtn.href = `/pdf/download/${file.name}`; // 다운로드 링크 설정
-                downloadBtn.download = `linearized_${file.name}`; // 다운로드 시 파일 확장자 설정
+                downloadBtn.href = `/pdf/download/${sanitizedFileName}`; // 다운로드 링크 설정
+                downloadBtn.download = `linearized_${sanitizedFileName}`; // 다운로드 시 파일 확장자 설정
               }
             })
             .catch((error) => {
@@ -97,7 +100,7 @@
 
         const firstChunk = file.slice(0, chunkSize);
         uploadChunk(firstChunk);
-      }
+      };
     </script>
   </body>
 </html>
