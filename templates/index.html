@@ -7,6 +7,7 @@
       #progress {
         width: 100%;
         background-color: #f3f3f3;
+        display: none; /* 기본적으로 숨김 */
       }
       #progressBar {
         width: 0;
@@ -36,6 +37,10 @@
         const totalChunks = Math.ceil(file.size / chunkSize); // 전체 청크 수 계산
         const progressBar = document.getElementById("progressBar");
         const progressText = document.getElementById("progressText");
+        const progressContainer = document.getElementById("progress");
+
+        // 진행 바 표시
+        progressContainer.style.display = "block";
 
         while (offset < file.size) {
           const chunk = file.slice(offset, offset + chunkSize);
@@ -64,6 +69,9 @@
             a.click();
             document.body.removeChild(a);
             alert("업로드 및 변형 완료!");
+
+            // 진행 바 숨김
+            progressContainer.style.display = "none";
             return; // 업로드 후 바로 종료
           }
 
