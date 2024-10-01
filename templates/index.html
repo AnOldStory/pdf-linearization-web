@@ -79,13 +79,11 @@
             fetch("/pdf/upload", {
               method: "POST",
               body: formData,
-            })
-              .then((response) => {
-                if (!response.ok) {
-                  throw new Error("파일 업로드 실패");
-                }
-              })
-              .catch(reject);
+            }).then((response) => {
+              if (!response.ok) {
+                throw new Error("파일 업로드 실패");
+              }
+            });
           } catch (error) {
             message.textContent = error.message;
           }
