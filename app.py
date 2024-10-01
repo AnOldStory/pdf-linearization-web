@@ -40,8 +40,11 @@ def upload_file():
 
     file.save(input_path)
 
+    # 마지막 청크인지 확인
+    last_chunk = request.form.get('lastChunk') == 'true'
+
     # 모든 청크가 업로드되었는지 확인
-    if all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")) for num in range(chunk_number + 1)):
+    if last_chunk and all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")) for num in range(chunk_number + 1)):
         # 모든 청크를 하나로 합칩니다.
         with open(os.path.join(UPLOAD_FOLDER, input_filename), 'wb') as outfile:
             for num in range(chunk_number + 1):

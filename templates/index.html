@@ -5,7 +5,7 @@
     <title>파일 업로드</title>
   </head>
   <body>
-    <h1>파일 업로드v</h1>
+    <h1>파일 업로드</h1>
     <input type="file" id="fileInput" />
     <button onclick="uploadFile()">업로드</button>
 
@@ -17,19 +17,26 @@
         let offset = 0;
         let chunkNumber = 0;
 
+        const totalChunks = Math.ceil(file.size / chunkSize); // 전체 청크 수 계산
+
         while (offset < file.size) {
           const chunk = file.slice(offset, offset + chunkSize);
           const formData = new FormData();
           formData.append("file", chunk, file.name);
           formData.append("chunkNumber", chunkNumber); // 청크 번호 추가
 
+          // 마지막 청크인 경우
+          if (chunkNumber === totalChunks - 1) {
+            formData.append("lastChunk", true); // 마지막 청크 정보 추가
+          }
+
           const response = await fetch("/pdf/upload", {
             method: "POST",
             body: formData,
           });
 
-          // 변형된 파일을 바로 다운로드하는 경우
-          if (response.ok) {
+          // 마지막 청크가 성공적으로 업로드된 경우에만 다운로드
+          if (response.ok && chunkNumber === totalChunks - 1) {
             const blob = await response.blob();
             const downloadUrl = URL.createObjectURL(blob);
             const a = document.createElement("a");
