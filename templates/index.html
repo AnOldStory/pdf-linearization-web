@@ -51,7 +51,7 @@
           return;
         }
 
-        const chunkSize = 1024 * 1024; // 1MB 청크 크기
+        const chunkSize = 1024 * 1024 * 10; // 10MB 청크 크기
         const totalChunks = Math.ceil(file.size / chunkSize);
         let currentChunk = 0;
 
@@ -61,8 +61,8 @@
         progressBar.style.width = "0%";
         message.textContent = "";
 
-        // 파일명에서 띄어쓰기를 _로 변경
-        const sanitizedFileName = file.name.replace(/\s+/g, "_");
+        // 파일명에서 띄어쓰기를 _로 변경하고 .pdf 제거
+        const sanitizedFileName = file.name.replace(/\s+/g, "_").replace(/\.pdf$/, "");
 
         const uploadChunk = (chunk) => {
           const formData = new FormData();
@@ -90,7 +90,7 @@
                 message.textContent = "모든 청크가 업로드되었습니다.";
                 downloadBtn.style.display = "inline"; // 다운로드 버튼을 표시
                 downloadBtn.href = `/pdf/download/${sanitizedFileName}`; // 다운로드 링크 설정
-                downloadBtn.download = `linearized_${sanitizedFileName}`; // 다운로드 시 파일 확장자 설정
+                downloadBtn.download = `linearized_${sanitizedFileName}.pdf`; // 다운로드 시 파일 확장자 설정
               }
             })
             .catch((error) => {

@@ -69,7 +69,7 @@ def upload_file():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
-    output_filename = f"linearized_{filename}"
+    output_filename = f"{filename}.pdf"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
 
     if os.path.exists(output_path):
