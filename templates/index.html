@@ -2,86 +2,99 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>파일 업로드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF 업로드</title>
     <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      input[type="file"] {
+        margin-bottom: 10px;
+      }
       #progress {
         width: 100%;
         background-color: #f3f3f3;
-        display: none; /* 기본적으로 숨김 */
+        border: 1px solid #ccc;
+        margin-top: 10px;
       }
-      #progressBar {
+      #progress-bar {
+        height: 20px;
         width: 0;
-        height: 30px;
         background-color: #4caf50;
+      }
+      #downloadBtn {
+        margin-top: 20px;
+        display: none; /* 초기에는 숨김 */
       }
     </style>
   </head>
   <body>
-    <h1>파일 업로드</h1>
-    <input type="file" id="fileInput" />
-    <button onclick="uploadFile()">업로드</button>
-
+    <h1>PDF 파일 업로드</h1>
+    <input type="file" id="fileInput" accept="application/pdf" />
+    <button id="uploadBtn">업로드</button>
     <div id="progress">
-      <div id="progressBar"></div>
+      <div id="progress-bar"></div>
     </div>
-    <div id="progressText">0%</div>
+    <div id="message"></div>
+    <a id="downloadBtn" href="#" download>선형화된 파일 다운로드</a>
 
     <script>
-      async function uploadFile() {
+      document.getElementById("uploadBtn").addEventListener("click", uploadFile);
+
+      function uploadFile() {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
-        const chunkSize = 1024 * 1024 * 10; // 10MB 청크 크기
-        let offset = 0;
-        let chunkNumber = 0;
 
-        const totalChunks = Math.ceil(file.size / chunkSize); // 전체 청크 수 계산
-        const progressBar = document.getElementById("progressBar");
-        const progressText = document.getElementById("progressText");
-        const progressContainer = document.getElementById("progress");
+        if (!file) {
+          alert("파일을 선택하세요.");
+          return;
+        }
 
-        // 진행 바 표시
-        progressContainer.style.display = "block";
+        const chunkSize = 1024 * 1024; // 1MB 청크 크기
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        let currentChunk = 0;
 
-        while (offset < file.size) {
-          const chunk = file.slice(offset, offset + chunkSize);
+        const progressBar = document.getElementById("progress-bar");
+        const message = document.getElementById("message");
+        const downloadBtn = document.getElementById("downloadBtn");
+        progressBar.style.width = "0%";
+        message.textContent = "";
+
+        const uploadChunk = (chunk) => {
           const formData = new FormData();
-          formData.append("file", chunk, file.name);
-          formData.append("chunkNumber", chunkNumber); // 청크 번호 추가
+          formData.append("file", chunk);
+          formData.append("chunkNumber", currentChunk);
+          formData.append("totalChunks", totalChunks);
 
-          // 마지막 청크인 경우
-          if (chunkNumber === totalChunks - 1) {
-            formData.append("lastChunk", true); // 마지막 청크 정보 추가
-          }
-
-          const response = await fetch("/pdf/upload", {
+          fetch("/upload", {
             method: "POST",
             body: formData,
-          });
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("파일 업로드 실패");
+              }
+              currentChunk++;
+              progressBar.style.width = `${((currentChunk / totalChunks) * 100).toFixed(2)}%`;
+              message.textContent = `청크 ${currentChunk} / ${totalChunks} 업로드 완료`;
 
-          // 마지막 청크가 성공적으로 업로드된 경우에만 다운로드
-          if (response.ok && chunkNumber === totalChunks - 1) {
-            const blob = await response.blob();
-            const downloadUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = downloadUrl;
-            a.download = `linearized_${file.name}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            alert("업로드 및 변형 완료!");
+              if (currentChunk < totalChunks) {
+                const nextChunk = file.slice(currentChunk * chunkSize, (currentChunk + 1) * chunkSize);
+                uploadChunk(nextChunk);
+              } else {
+                message.textContent = "모든 청크가 업로드되었습니다.";
+                downloadBtn.style.display = "inline"; // 다운로드 버튼을 표시
+                downloadBtn.href = `/download/${file.name}`; // 다운로드 링크 설정
+              }
+            })
+            .catch((error) => {
+              message.textContent = error.message;
+            });
+        };
 
-            // 진행 바 숨김
-            progressContainer.style.display = "none";
-            return; // 업로드 후 바로 종료
-          }
-
-          // 진행 상황 업데이트
-          chunkNumber++;
-          offset += chunkSize;
-          const percentUploaded = Math.min((chunkNumber / totalChunks) * 100, 100);
-          progressBar.style.width = percentUploaded + "%";
-          progressText.innerText = Math.round(percentUploaded) + "%";
-        }
+        const firstChunk = file.slice(0, chunkSize);
+        uploadChunk(firstChunk);
       }
     </script>
   </body>
