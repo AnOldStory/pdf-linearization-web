@@ -9,6 +9,17 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'files'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+def linearize_pdf(input_path, output_path):
+    with open(input_path, 'rb') as infile:
+        reader = PyPDF2.PdfReader(infile)
+        writer = PyPDF2.PdfWriter()
+
+        for page in reader.pages:
+            writer.add_page(page)
+
+        with open(output_path, 'wb') as outfile:
+            writer.write(outfile)
+
 def process_pdf(input_filename, total_chunks):
     # 모든 청크를 하나로 합칩니다.
     with open(os.path.join(UPLOAD_FOLDER, input_filename), 'wb') as outfile:
@@ -23,17 +34,6 @@ def process_pdf(input_filename, total_chunks):
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
     linearize_pdf(os.path.join(UPLOAD_FOLDER, input_filename), output_path)
 
-def linearize_pdf(input_path, output_path):
-    with open(input_path, 'rb') as infile:
-        reader = PyPDF2.PdfReader(infile)
-        writer = PyPDF2.PdfWriter()
-
-        for page in reader.pages:
-            writer.add_page(page)
-
-        with open(output_path, 'wb') as outfile:
-            writer.write(outfile)
-
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -44,14 +44,14 @@ def upload_file():
         return '파일이 없습니다.', 400
 
     file = request.files['file']
+    filename = request.form.get('filename')  # 클라이언트에서 전송한 파일명
 
-    if file.filename == '':
+    if filename == '':
         return '파일명을 입력하세요.', 400
 
     # 파일명과 경로 설정
-    input_filename = file.filename
     chunk_number = int(request.form.get('chunkNumber', 0))
-    input_path = os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{chunk_number}")
+    input_path = os.path.join(UPLOAD_FOLDER, f"{filename}.part{chunk_number}")
 
     file.save(input_path)
 
@@ -59,9 +59,9 @@ def upload_file():
     total_chunks = int(request.form.get('totalChunks', 0))
 
     # 모든 청크가 업로드되었는지 확인
-    if total_chunks > 0 and all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{input_filename}.part{num}")) for num in range(total_chunks)):
+    if total_chunks > 0 and all(os.path.exists(os.path.join(UPLOAD_FOLDER, f"{filename}.part{num}")) for num in range(total_chunks)):
         # 청크 합치기 및 선형화 작업을 병렬로 처리
-        threading.Thread(target=process_pdf, args=(input_filename, total_chunks)).start()
+        threading.Thread(target=process_pdf, args=(filename, total_chunks)).start()
 
         return '모든 청크가 업로드되었습니다.', 200
 
