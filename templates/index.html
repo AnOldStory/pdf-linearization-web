@@ -67,7 +67,7 @@
           formData.append("chunkNumber", currentChunk);
           formData.append("totalChunks", totalChunks);
 
-          fetch("/upload", {
+          fetch("/pdf/upload", {
             method: "POST",
             body: formData,
           })
