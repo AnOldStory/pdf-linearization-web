@@ -13,7 +13,7 @@
       async function uploadFile() {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
-        const chunkSize = 1024 * 1024 * 40; // 40MB 청크 크기
+        const chunkSize = 1024 * 1024 * 2; // 2MB 청크 크기
         let offset = 0;
         let chunkNumber = 0;
 
