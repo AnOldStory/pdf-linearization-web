@@ -3,21 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <title>파일 업로드</title>
+    <style>
+      #progress {
+        width: 100%;
+        background-color: #f3f3f3;
+      }
+      #progressBar {
+        width: 0;
+        height: 30px;
+        background-color: #4caf50;
+      }
+    </style>
   </head>
   <body>
     <h1>파일 업로드</h1>
     <input type="file" id="fileInput" />
     <button onclick="uploadFile()">업로드</button>
 
+    <div id="progress">
+      <div id="progressBar"></div>
+    </div>
+    <div id="progressText">0%</div>
+
     <script>
       async function uploadFile() {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
-        const chunkSize = 1024 * 1024 * 2; // 2MB 청크 크기
+        const chunkSize = 1024 * 1024 * 10; // 10MB 청크 크기
         let offset = 0;
         let chunkNumber = 0;
 
         const totalChunks = Math.ceil(file.size / chunkSize); // 전체 청크 수 계산
+        const progressBar = document.getElementById("progressBar");
+        const progressText = document.getElementById("progressText");
 
         while (offset < file.size) {
           const chunk = file.slice(offset, offset + chunkSize);
@@ -49,8 +67,12 @@
             return; // 업로드 후 바로 종료
           }
 
-          offset += chunkSize;
+          // 진행 상황 업데이트
           chunkNumber++;
+          offset += chunkSize;
+          const percentUploaded = Math.min((chunkNumber / totalChunks) * 100, 100);
+          progressBar.style.width = percentUploaded + "%";
+          progressText.innerText = Math.round(percentUploaded) + "%";
         }
       }
     </script>
