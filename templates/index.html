@@ -42,7 +42,7 @@
     <script>
       document.getElementById("uploadBtn").addEventListener("click", uploadFile);
 
-      const uploadFile = () => {
+      function uploadFile() {
         const fileInput = document.getElementById("fileInput");
         const file = fileInput.files[0];
 
@@ -100,7 +100,7 @@
 
         const firstChunk = file.slice(0, chunkSize);
         uploadChunk(firstChunk);
-      };
+      }
     </script>
   </body>
 </html>
