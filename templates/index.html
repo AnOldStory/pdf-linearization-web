@@ -80,11 +80,23 @@
             fetch("/pdf/upload", {
               method: "POST",
               body: formData,
-            }).then((response) => {
-              if (!response.ok) {
-                throw new Error("파일 업로드 실패");
-              }
-            });
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("파일 업로드 실패");
+                }
+                return response.blob();
+              })
+              .then((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a"); // 앵커 태그 생성
+                a.style.display = "none";
+                a.href = url;
+                a.download = "파일이름.pdf"; // 다운로드할 파일 이름
+                document.body.appendChild(a);
+                a.click(); // 클릭하여 다운로드 시작
+                window.URL.revokeObjectURL(url); // Blob URL 해제
+              });
           } catch (error) {
             message.textContent = error.message;
           }

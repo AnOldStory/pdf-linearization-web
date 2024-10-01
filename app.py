@@ -52,7 +52,7 @@ def upload_file():
     filename = request.form.get('filename')  # 클라이언트에서 전송한 파일명
 
     if chunk_number == -1:
-        process_pdf(filename, total_chunks)  # 쓰레드 제거하고 직접 호출
+        process_pdf(filename, total_chunks) 
         output_filename = f"linearized_{filename}"
         output_path = os.path.join(UPLOAD_FOLDER, output_filename)
 
