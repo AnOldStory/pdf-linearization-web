@@ -1,0 +1,5 @@
+Python version 3.12.5
+Application root domains/[url]/[base]
+Application startup file app.py
+Application entry point pplication
+Pasenger log file log/pdf.log
